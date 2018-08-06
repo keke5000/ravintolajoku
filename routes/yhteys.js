@@ -14,8 +14,9 @@ MongoClient.connect(url, {useNewUrlParser: true}, (err, db) => {
     console.log("Yhteys Mongoon saatu");
     const kokoelma = dbo.collection('ravintolajoku');
 
+	//Hakee valittuihin hakuehtoihin perustuen kaikista ravintoloista 10 ensimmäistä ehdokasta.
     router.route('/')
-        .get(function (req, res) {
+        .get((req, res) => {
             kokoelma.find({borough: req.query.borough, cuisine: req.query.cuisine}).limit(10).toArray().then((result) => {
                 console.log(res);
                 res.json(result);
@@ -24,6 +25,7 @@ MongoClient.connect(url, {useNewUrlParser: true}, (err, db) => {
                 console.log(err.stack);
             });
         })
+	//TODO korjaus & testaus
         .post((req, res) => {
             kokoelma.save(req.body, (err, result) => {
                 if (err) return console.log(err);
@@ -31,11 +33,12 @@ MongoClient.connect(url, {useNewUrlParser: true}, (err, db) => {
                 res.redirect('/')
             })
         })
+	//TODO korjaus & testaus
         .put((req, res) => {
             kokoelma.findOneAndUpdate({borough: req.body.borough}, {
                 $set: {
-                    name: req.body.name,
-                    borough: req.body.borough
+                    name: req.query.name,
+                    borough: req.query.borough
                 }
             }, {
                 //sort: {_id: -1},
@@ -53,22 +56,18 @@ MongoClient.connect(url, {useNewUrlParser: true}, (err, db) => {
                 })
         });
 
-    router.route("/hae")
-        .get((req, res) => {
-            kokoelma.find({borough: req.body.borough}).limit(25).toArray().then((result) => {
-                console.log(res);
-                res.json(result);
-            })
-        })
-        .get((req, res) => {
-            kokoelma.find({cuisine: req.body.cuisine}).limit(25).toArray().then((result) => {
-                console.log(res);
-                res.json(result);
-            })
-        })
-
 
 
 });
+
+//Mahdollisuus poistaa nimen perusteella
+router.route("/:name") .delete((req, res) => {
+            kokoelma.findOneAndDelete({name: req.params.name},
+                (err, result) => {
+                    if (err) return res.send(500, err);
+                    res.send({message: 'Object deleted! Hope you aint gonna miss it..'})
+                })
+
+
 
 module.exports = router;
